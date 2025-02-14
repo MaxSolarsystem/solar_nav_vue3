@@ -22,8 +22,15 @@ interface SearchEngine {
   url: string;
 }
 
+// 添加笔记接口
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  createTime: string;
+}
+
 const searchQuery = ref('');
-const noteContent = ref('');
 const categories = ref<Category[]>([]); // 添加类型注解
 const siteSearchQuery = ref('');
 const isEngineDropdownOpen = ref(false);
@@ -54,11 +61,18 @@ const searchEngines = ref<SearchEngine[]>([
 
 const currentSearchEngine = ref<SearchEngine>(searchEngines.value[0]);
 
-// 从localStorage加载笔记
-const savedNote = localStorage.getItem('quickNote');
-if (savedNote) {
-  noteContent.value = savedNote;
-}
+// 修改笔记相关的 ref
+const notes = ref<Note[]>([{
+  id: '1',
+  title: '笔记 1',
+  content: '',
+  createTime: new Date().toLocaleString()
+}]);
+const currentNoteId = ref<string>('1');
+
+// 添加编辑状态的 ref
+const editingNoteId = ref<string | null>(null);
+const editingTitle = ref('');
 
 // 加载导航数据
 const loadNavData = async () => {
@@ -73,6 +87,15 @@ const loadNavData = async () => {
 
 onMounted(() => {
   loadNavData();
+  const savedNotes = localStorage.getItem('quickNotes');
+  const savedCurrentId = localStorage.getItem('currentNoteId');
+  
+  if (savedNotes) {
+    notes.value = JSON.parse(savedNotes);
+  }
+  if (savedCurrentId) {
+    currentNoteId.value = savedCurrentId;
+  }
 });
 
 // 修改搜索处理函数
@@ -81,11 +104,6 @@ const handleSearch = (e: Event) => {
   if (searchQuery.value) {
     window.open(`${currentSearchEngine.value.url}${encodeURIComponent(searchQuery.value)}`, '_blank');
   }
-}
-
-// 自动保存笔记
-const saveNote = () => {
-  localStorage.setItem('quickNote', noteContent.value);
 }
 
 // 计算属性：过滤后的分类和网站
@@ -103,32 +121,122 @@ const filteredCategories = computed(() => {
   })).filter(category => category.sites.length > 0);
 });
 
-// 清除笔记内容
+// 清除当前笔记
 const clearNote = () => {
-  if (confirm('确定要清除所有笔记内容吗？')) {
-    noteContent.value = '';
-    localStorage.removeItem('quickNote');
+  if (confirm('确定要清除当前笔记的内容吗？')) {
+    const note = notes.value.find(note => note.id === currentNoteId.value);
+    if (note) {
+      note.content = '';
+      saveNotes();
+    }
   }
 }
 
 // 导出笔记内容为txt文件
 const exportNote = () => {
-  if (!noteContent.value.trim()) {
+  const note = notes.value.find(note => note.id === currentNoteId.value);
+  if (!note.content.trim()) {
     alert('笔记内容为空，无法导出！');
     return;
   }
   
-  const blob = new Blob([noteContent.value], { type: 'text/plain;charset=utf-8' });
+  const blob = new Blob([note.content], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   
   link.href = url;
-  link.download = `我的笔记_${new Date().toLocaleDateString()}.txt`;
+  link.download = `${note.title}_${new Date().toLocaleDateString()}.txt`;
   document.body.appendChild(link);
   link.click();
   
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+// 计算当前笔记
+const currentNote = computed(() => {
+  return notes.value.find(note => note.id === currentNoteId.value) || notes.value[0];
+});
+
+// 添加新笔记
+const addNote = () => {
+  if (notes.value.length >= 10) {
+    alert('最多只能创建10个笔记！');
+    return;
+  }
+  
+  const newNote: Note = {
+    id: Date.now().toString(),
+    title: `笔记 ${notes.value.length + 1}`,
+    content: '',
+    createTime: new Date().toLocaleString()
+  };
+  
+  notes.value.push(newNote);
+  currentNoteId.value = newNote.id;
+  saveNotes();
+}
+
+// 删除笔记
+const deleteNote = (noteId: string) => {
+  if (notes.value.length <= 1) {
+    alert('至少需要保留一个笔记！');
+    return;
+  }
+  
+  if (confirm('确定要删除这个笔记吗？')) {
+    const index = notes.value.findIndex(note => note.id === noteId);
+    notes.value.splice(index, 1);
+    
+    if (currentNoteId.value === noteId) {
+      currentNoteId.value = notes.value[0].id;
+    }
+    
+    saveNotes();
+  }
+}
+
+// 保存笔记
+const saveNotes = () => {
+  localStorage.setItem('quickNotes', JSON.stringify(notes.value));
+  localStorage.setItem('currentNoteId', currentNoteId.value);
+}
+
+// 更新笔记内容
+const updateNoteContent = (content: string) => {
+  const note = notes.value.find(note => note.id === currentNoteId.value);
+  if (note) {
+    note.content = content;
+    saveNotes();
+  }
+}
+
+// 开始编辑标题
+const startEditTitle = (note: Note) => {
+  editingNoteId.value = note.id;
+  editingTitle.value = note.title;
+}
+
+// 保存标题
+const saveTitle = () => {
+  if (!editingNoteId.value) return;
+  
+  const note = notes.value.find(note => note.id === editingNoteId.value);
+  if (note && editingTitle.value.trim()) {
+    note.title = editingTitle.value.trim();
+    saveNotes();
+  }
+  editingNoteId.value = null;
+}
+
+// 处理按键事件
+const handleTitleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    saveTitle();
+  } else if (e.key === 'Escape') {
+    editingNoteId.value = null;
+  }
 }
 </script>
 
@@ -240,9 +348,52 @@ const exportNote = () => {
             </button>
           </div>
         </div>
+        
+        <div class="note-tabs">
+          <div class="tab-list">
+            <button
+              v-for="note in notes"
+              :key="note.id"
+              class="tab-item"
+              :class="{ active: currentNoteId === note.id }"
+              @click="currentNoteId = note.id"
+              @dblclick.stop="startEditTitle(note)"
+            >
+              <template v-if="editingNoteId === note.id">
+                <input
+                  v-model="editingTitle"
+                  class="title-input"
+                  @keydown="handleTitleKeydown"
+                  @blur="saveTitle"
+                  @click.stop
+                  ref="titleInput"
+                  :maxlength="20"
+                >
+              </template>
+              <template v-else>
+                {{ note.title }}
+              </template>
+              <span 
+                v-if="notes.length > 1" 
+                class="delete-tab" 
+                @click.stop="deleteNote(note.id)"
+              >
+                ×
+              </span>
+            </button>
+            <button 
+              v-if="notes.length < 10"
+              class="add-tab-btn" 
+              @click="addNote"
+            >
+              + 新建笔记
+            </button>
+          </div>
+        </div>
+        
         <textarea 
-          v-model="noteContent"
-          @input="saveNote"
+          v-model="currentNote.content"
+          @input="updateNoteContent($event.target.value)"
           placeholder="在这里写下临时笔记..."
         ></textarea>
       </div>
@@ -708,5 +859,124 @@ textarea::-webkit-scrollbar-thumb:hover {
   padding: 2rem;
   color: #9fa8da;
   font-size: 0.95rem;
+}
+
+.note-tabs {
+  margin-bottom: 1rem;
+}
+
+.tab-list {
+  display: flex;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #475569;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab-item.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+.delete-tab {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.1);
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+}
+
+.tab-item.active .delete-tab {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.delete-tab:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.add-tab-btn {
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  border: 1px dashed #94a3b8;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.add-tab-btn:hover {
+  background: #e2e8f0;
+  border-color: #64748b;
+}
+
+/* 适配移动端 */
+@media (max-width: 768px) {
+  .tab-list {
+    padding-bottom: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .tab-item,
+  .add-tab-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+}
+
+.title-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0.2rem 0.4rem;
+  margin: 0;
+  width: 120px;
+  max-width: 150px;
+  border-radius: 4px;
+
+  transition: all 0.2s ease;
+}
+
+.tab-item:not(.active) .title-input {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.tab-item:not(.active) .title-input:focus {
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* 添加占位符样式 */
+.title-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tab-item:not(.active) .title-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
 }
 </style>
