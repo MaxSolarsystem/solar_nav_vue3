@@ -6,7 +6,6 @@ interface Site {
   name: string;
   url: string;
   icon: string;
-  description: string;
 }
 
 interface Category {
@@ -115,8 +114,7 @@ const filteredCategories = computed(() => {
   return categories.value.map(category => ({
     ...category,
     sites: category.sites.filter(site => 
-      site.name.toLowerCase().includes(query) || 
-      site.description.toLowerCase().includes(query)
+      site.name.toLowerCase().includes(query)
     )
   })).filter(category => category.sites.length > 0);
 });
@@ -277,13 +275,10 @@ const titleInput = ref<HTMLInputElement | null>(null);
               :href="site.url"
               target="_blank"
               class="site-card"
-              :title="site.description"
+              :title="site.name"
             >
               <span class="site-icon">{{ site.icon }}</span>
-              <div class="site-info">
-                <span class="site-name">{{ site.name }}</span>
-                <span class="site-description">{{ site.description }}</span>
-              </div>
+              <span class="site-name">{{ site.name }}</span>
             </a>
           </div>
         </div>
@@ -503,42 +498,32 @@ const titleInput = ref<HTMLInputElement | null>(null);
 .site-card {
   display: flex;
   align-items: center;
-  padding: 1rem;
+  padding: 0.8rem;
   background-color: #fafbff;
-  border-radius: 12px;
+  border-radius: 10px;
   text-decoration: none;
   color: #3949ab;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  border: 1px solid #e8eaf6;
 }
 
 .site-card:hover {
-  background-color: #e8eaf6;
-  transform: translateX(8px);
-  border: 1px solid #c5cae9;
+  background-color: #eef2ff;
+  transform: translateY(-2px);
+  border-color: #c7d2fe;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
 }
 
 .site-icon {
-  font-size: 1.4rem;
-  margin-right: 1rem;
-  opacity: 0.9;
-}
-
-.site-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+  font-size: 1.2rem;
+  margin-right: 0.8rem;
+  opacity: 1;
 }
 
 .site-name {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 500;
-}
-
-.site-description {
-  font-size: 0.8rem;
-  color: #7986cb;
-  opacity: 0.8;
+  color: #4f46e5;
 }
 
 .main-content {

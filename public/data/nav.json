@@ -1,52 +1,66 @@
 {
-    "categories": [
-      {
-        "name": "AI工具",
-        "icon": "🤖",
-        "sites": [
-          {
-            "name": "Qwen",
-            "url": "https://chat.qwenlm.ai",
-            "icon": "💬",
-            "description": "阿里巴巴推出的多功能AI助手，支持对话、写作、编程等任务"
-          },
-          {
-            "name": "ChatGPT",
-            "url": "https://chatgpt.com/",
-            "icon": "🧠",
-            "description": "由OpenAI开发的强大语言模型，擅长生成自然语言和解答复杂问题"
-          },
-          {
-            "name": "Deepseek",
-            "url": "https://www.deepseek.com",
-            "icon": "🔍",
-            "description": "专注于大语言模型研究的AI工具，提供高效的知识检索和生成能力"
-          }
-        ]
-      },
-      {
-        "name": "B站UP主",
-        "icon": "🎥",
-        "sites": [
-          {
-            "name": "秋芝2046",
-            "url": "https://space.bilibili.com/385670211",
-            "icon": "🎮",
-            "description": "专注于游戏攻略和娱乐内容的UP主"
-          },
-          {
-            "name": "产品君",
-            "url": "https://space.bilibili.com/1845434732",
-            "icon": "💡",
-            "description": "分享产品设计、用户体验和创新思维的UP主"
-          },
-          {
-            "name": "原子能",
-            "url": "https://space.bilibili.com/162183",
-            "icon": "🔥",
-            "description": "科技与知识科普类UP主，专注于前沿技术与科学话题"
-          }
-        ]
-      }
-    ]
-  }
+  "categories": [
+    {
+      "name": "AI助手",
+      "icon": "🤖",
+      "sites": [
+        {
+          "name": "ChatGPT",
+          "url": "https://chat.openai.com",
+          "icon": "🧠"
+        },
+        {
+          "name": "Qwen",
+          "url": "https://chat.qwenlm.ai",
+          "icon": "🦜"
+        },
+        {
+          "name": "Deepseek",
+          "url": "https://www.deepseek.com",
+          "icon": "🔍"
+        },
+        {
+          "name": "豆包",
+          "url": "https://www.doubao.com/chat/",
+          "icon": "✨"
+        },
+        {
+          "name": "Kimi",
+          "url": "https://kimi.moonshot.cn/",
+          "icon": "🌊"
+        }
+      ]
+    },
+    {
+      "name": "开发工具",
+      "icon": "⚡",
+      "sites": [
+        {
+          "name": "GitHub",
+          "url": "https://github.com",
+          "icon": "📦"
+        },
+        {
+          "name": "Gitee",
+          "url": "https://gitee.com",
+          "icon": "🏠"
+        },
+        {
+          "name": "DevDocs",
+          "url": "https://devdocs.io",
+          "icon": "📚"
+        },
+        {
+          "name": "掘金",
+          "url": "https://juejin.cn",
+          "icon": "💎"
+        },
+        {
+          "name": "CSDN",
+          "url": "https://csdn.net",
+          "icon": "🔧"
+        }
+      ]
+    }
+  ]
+}
