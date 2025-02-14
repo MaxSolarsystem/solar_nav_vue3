@@ -135,6 +135,8 @@ const clearNote = () => {
 // 导出笔记内容为txt文件
 const exportNote = () => {
   const note = notes.value.find(note => note.id === currentNoteId.value);
+  if (!note) return;
+  
   if (!note.content.trim()) {
     alert('笔记内容为空，无法导出！');
     return;
@@ -203,10 +205,11 @@ const saveNotes = () => {
 }
 
 // 更新笔记内容
-const updateNoteContent = (content: string) => {
+const updateNoteContent = (event: Event) => {
+  const target = event.target as HTMLTextAreaElement;
   const note = notes.value.find(note => note.id === currentNoteId.value);
   if (note) {
-    note.content = content;
+    note.content = target.value;
     saveNotes();
   }
 }
@@ -238,6 +241,9 @@ const handleTitleKeydown = (e: KeyboardEvent) => {
     editingNoteId.value = null;
   }
 }
+
+// 添加 ref 类型
+const titleInput = ref<HTMLInputElement | null>(null);
 </script>
 
 <template>
@@ -368,6 +374,7 @@ const handleTitleKeydown = (e: KeyboardEvent) => {
                   @click.stop
                   ref="titleInput"
                   :maxlength="20"
+                  type="text"
                 >
               </template>
               <template v-else>
@@ -393,7 +400,7 @@ const handleTitleKeydown = (e: KeyboardEvent) => {
         
         <textarea 
           v-model="currentNote.content"
-          @input="updateNoteContent($event.target.value)"
+          @input="updateNoteContent"
           placeholder="在这里写下临时笔记..."
         ></textarea>
       </div>
