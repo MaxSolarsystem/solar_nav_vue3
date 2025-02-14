@@ -1,9 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 
+// 添加类型定义
+interface Site {
+  name: string;
+  url: string;
+  icon: string;
+  description: string;
+}
+
+interface Category {
+  name: string;
+  icon: string;
+  sites: Site[];
+}
+
 const searchQuery = ref('');
 const noteContent = ref('');
-const categories = ref([]);
+const categories = ref<Category[]>([]); // 添加类型注解
 const siteSearchQuery = ref('');
 
 // 从localStorage加载笔记
