@@ -15,10 +15,44 @@ interface Category {
   sites: Site[];
 }
 
+// 添加搜索引擎接口
+interface SearchEngine {
+  name: string;
+  icon: string;
+  url: string;
+}
+
 const searchQuery = ref('');
 const noteContent = ref('');
 const categories = ref<Category[]>([]); // 添加类型注解
 const siteSearchQuery = ref('');
+const isEngineDropdownOpen = ref(false);
+
+// 定义搜索引擎列表
+const searchEngines = ref<SearchEngine[]>([
+  {
+    name: 'Google',
+    icon: '🔍',
+    url: 'https://www.google.com/search?q='
+  },
+  {
+    name: 'Bing',
+    icon: '🔎',
+    url: 'https://www.bing.com/search?q='
+  },
+  {
+    name: 'Baidu',
+    icon: '🌐',
+    url: 'https://www.baidu.com/s?wd='
+  },
+  {
+    name: 'DuckDuckGo',
+    icon: '🦆',
+    url: 'https://duckduckgo.com/?q='
+  }
+]);
+
+const currentSearchEngine = ref<SearchEngine>(searchEngines.value[0]);
 
 // 从localStorage加载笔记
 const savedNote = localStorage.getItem('quickNote');
@@ -41,10 +75,11 @@ onMounted(() => {
   loadNavData();
 });
 
+// 修改搜索处理函数
 const handleSearch = (e: Event) => {
   e.preventDefault();
   if (searchQuery.value) {
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery.value)}`, '_blank');
+    window.open(`${currentSearchEngine.value.url}${encodeURIComponent(searchQuery.value)}`, '_blank');
   }
 }
 
@@ -146,14 +181,40 @@ const exportNote = () => {
       <!-- 搜索区域 -->
       <div class="search-section">
         <form @submit="handleSearch" class="search-form">
+          <div class="search-engine-selector">
+            <button 
+              type="button"
+              class="current-engine"
+              @click="isEngineDropdownOpen = !isEngineDropdownOpen"
+            >
+              <span class="engine-icon">{{ currentSearchEngine.icon }}</span>
+              {{ currentSearchEngine.name }}
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div 
+              v-show="isEngineDropdownOpen" 
+              class="engine-dropdown"
+            >
+              <button
+                v-for="engine in searchEngines"
+                :key="engine.name"
+                type="button"
+                class="engine-option"
+                @click="currentSearchEngine = engine; isEngineDropdownOpen = false"
+              >
+                <span class="engine-icon">{{ engine.icon }}</span>
+                {{ engine.name }}
+              </button>
+            </div>
+          </div>
           <input 
             v-model="searchQuery"
             type="text" 
-            placeholder="搜索 Google..."
+            :placeholder="`搜索 ${currentSearchEngine.name}...`"
             autocomplete="off"
           >
           <button type="submit">
-            <span class="search-icon">🔍</span>
+            <span class="search-icon">{{ currentSearchEngine.icon }}</span>
           </button>
         </form>
       </div>
@@ -339,49 +400,122 @@ const exportNote = () => {
   display: flex;
   gap: 0.8rem;
   background: white;
-  padding: 0.6rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 0.8rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   border: 1px solid #e8eaf6;
-  transition: all 0.3s ease;
+  align-items: center;
 }
 
-.search-form:focus-within {
-  border-color: #3949ab;
-  box-shadow: 0 2px 12px rgba(63, 81, 181, 0.1);
+.search-engine-selector {
+  position: relative;
+  min-width: 160px; /* 减小最小宽度 */
+}
+
+.current-engine {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.8rem; /* 减小内边距 */
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem; /* 减小字体大小 */
+  color: #475569;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.current-engine:hover {
+  background: #e2e8f0;
+}
+
+.engine-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  overflow: hidden; /* 确保圆角效果 */
+}
+
+.engine-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.8rem; /* 减小内边距 */
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: #475569;
+  font-size: 0.85rem; /* 减小字体大小 */
+  transition: all 0.2s ease;
+}
+
+.engine-option:hover {
+  background: #f1f5f9;
+}
+
+.engine-icon {
+  font-size: 1rem; /* 减小图标大小 */
+}
+
+.dropdown-arrow {
+  font-size: 0.7rem;
+  margin-left: auto;
+  color: #94a3b8;
 }
 
 .search-form input {
   flex: 1;
-  padding: 1rem 1.5rem;
-  font-size: 1.1rem;
-  border: none;
+  padding: 0.5rem 0.8rem; /* 减小内边距 */
+  font-size: 0.95rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #1e293b;
+  transition: all 0.2s ease;
+}
+
+.search-form input:focus {
   outline: none;
-  background: transparent;
-  color: #1a237e;
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .search-form input::placeholder {
-  color: #9fa8da;
+  color: #94a3b8;
 }
 
-.search-form button {
+.search-form button[type="submit"] {
+  padding: 0.5rem 1rem; /* 减小按钮内边距 */
   border: none;
-  padding: 1rem 2rem;
-  border-radius: 12px;
+  border-radius: 8px;
+  background: #3b82f6;
   color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 1.1rem;
+  gap: 0.4rem;
+  font-size: 0.9rem;
 }
 
-.search-form button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 12px rgba(63, 81, 181, 0.1);
+.search-form button[type="submit"]:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.search-form button[type="submit"] .search-icon {
+  font-size: 0.9rem; /* 减小搜索图标大小 */
 }
 
 .note-section {
@@ -519,12 +653,17 @@ textarea::-webkit-scrollbar-thumb:hover {
   }
 
   .search-form {
-    flex-direction: column;
+    padding: 0.6rem;
+    gap: 0.5rem;
   }
 
-  .search-form button {
+  .search-engine-selector {
     width: 100%;
-    justify-content: center;
+  }
+
+  .current-engine,
+  .engine-option {
+    padding: 0.4rem 0.6rem;
   }
 
   .note-section {
