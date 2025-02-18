@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { getGitHubConfig, updateGitHubConfig } from '../config/github'
 
 const router = useRouter()
-const gitConfig = ref({
-  repository: '',
-  branch: '',
-  username: '',
-  token: ''
-})
+const gitConfig = ref(getGitHubConfig())
 
 const saveConfig = () => {
-  // TODO: 实现保存配置的逻辑
+  updateGitHubConfig(gitConfig.value)
   console.log('保存配置:', gitConfig.value)
+  router.push('/')
 }
 
 const goBack = () => {
   router.push('/')
+}
+
+const openGitHubTokenPage = () => {
+  window.open('https://github.com/settings/tokens/new', '_blank')
 }
 </script>
 
@@ -27,54 +28,72 @@ const goBack = () => {
         <button class="back-button" @click="goBack">
           <span class="back-icon">←</span> 返回主页
         </button>
-        <h2 class="setting-title">Git 配置</h2>
+        <h2 class="setting-title">GitHub 配置</h2>
       </div>
       <form @submit.prevent="saveConfig" class="setting-form">
         <div class="form-section">
           <h3 class="section-title">仓库信息</h3>
           <div class="form-group">
-            <label for="repository">仓库地址</label>
+            <label for="owner">仓库所有者</label>
             <input
-              id="repository"
-              v-model="gitConfig.repository"
+              id="owner"
+              v-model="gitConfig.owner"
               type="text"
-              placeholder="请输入Git仓库地址"
+              placeholder="请输入仓库所有者名称"
               required
             >
           </div>
           <div class="form-group">
-            <label for="branch">分支名称</label>
+            <label for="repo">仓库名称</label>
             <input
-              id="branch"
-              v-model="gitConfig.branch"
+              id="repo"
+              v-model="gitConfig.repo"
               type="text"
-              placeholder="请输入分支名称"
-              required
-            >
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h3 class="section-title">认证信息</h3>
-          <div class="form-group">
-            <label for="username">用户名</label>
-            <input
-              id="username"
-              v-model="gitConfig.username"
-              type="text"
-              placeholder="请输入Git用户名"
+              placeholder="请输入仓库名称"
               required
             >
           </div>
           <div class="form-group">
-            <label for="token">访问令牌</label>
+            <label for="path">文件路径</label>
             <input
-              id="token"
-              v-model="gitConfig.token"
-              type="password"
-              placeholder="请输入访问令牌"
+              id="path"
+              v-model="gitConfig.path"
+              type="text"
+              placeholder="请输入导航文件路径"
               required
             >
+          </div>
+          <div class="form-group">
+            <label for="token">GitHub Token</label>
+            <div class="token-input-group">
+              <input
+                id="token"
+                v-model="gitConfig.token"
+                type="password"
+                placeholder="请输入 GitHub Token"
+                required
+              >
+              <button type="button" class="token-button" @click="openGitHubTokenPage">
+                <svg class="token-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                  <path d="M15 3h6v6" />
+                  <path d="M10 14L21 3" />
+                </svg>
+                获取 Token
+              </button>
+            </div>
+            <div class="token-help">
+              <p class="help-text">点击"获取 Token"按钮跳转到 GitHub Token 生成页面，请确保：</p>
+              <ul class="permission-list">
+                <li>Token 名称可以设置为 "Solar-Nav-Token"</li>
+                <li>Token 有效期建议设置为 "No expiration"</li>
+                <li>必须勾选以下权限：
+                  <ul>
+                    <li>repo (完整的仓库访问权限)</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -198,6 +217,71 @@ input::placeholder {
   color: #a0aec0;
 }
 
+.token-input-group {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.token-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.2rem;
+  background-color: #4a5568;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.token-button:hover {
+  background-color: #2d3748;
+  transform: translateY(-1px);
+}
+
+.token-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.token-help {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #edf2f7;
+  border-radius: 8px;
+}
+
+.help-text {
+  color: #4a5568;
+  font-size: 0.9rem;
+  margin: 0 0 0.8rem 0;
+}
+
+.permission-list {
+  color: #4a5568;
+  font-size: 0.9rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.permission-list ul {
+  margin-top: 0.4rem;
+  padding-left: 1.2rem;
+}
+
+.permission-list li {
+  margin-bottom: 0.4rem;
+}
+
+.permission-list li:last-child {
+  margin-bottom: 0;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -248,6 +332,15 @@ input::placeholder {
 
   .form-section {
     padding: 1.2rem;
+  }
+
+  .token-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .token-button {
+    justify-content: center;
   }
 
   .save-button {

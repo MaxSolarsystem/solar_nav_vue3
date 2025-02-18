@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { getGitHubApiUrl } from '../config/github';
 
 // 类型定义
 interface Site {
@@ -21,9 +22,18 @@ const siteSearchQuery = ref('');
 // 加载导航数据
 const loadNavData = async () => {
   try {
-    const response = await fetch('/data/nav.json');
+    const response = await fetch(getGitHubApiUrl());
     const data = await response.json();
-    categories.value = data.categories;
+    // GitHub API 返回的文件内容是 Base64 编码的
+    // 将 Base64 解码后的内容转换为 UTF-16 编码格式
+    const decodedContent = atob(data.content);
+    const uint8Array = new Uint8Array(decodedContent.length);
+    for (let i = 0; i < decodedContent.length; i++) {
+      uint8Array[i] = decodedContent.charCodeAt(i);
+    }
+    const decoder = new TextDecoder('utf-8');
+    const content = JSON.parse(decoder.decode(uint8Array));
+    categories.value = content.categories;
   } catch (error) {
     console.error('加载导航数据失败:', error);
   }
@@ -250,4 +260,4 @@ defineExpose({
     font-size: 0.9rem;
   }
 }
-</style> 
+</style>
