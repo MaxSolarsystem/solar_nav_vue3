@@ -52,7 +52,7 @@ const handleSearch = (e: Event) => {
 </script>
 
 <template>
-  <div class="search-section">
+
     <form @submit="handleSearch" class="search-form">
       <div class="search-engine-selector">
         <button 
@@ -90,7 +90,7 @@ const handleSearch = (e: Event) => {
         <span class="search-icon">{{ currentSearchEngine.icon }}</span>
       </button>
     </form>
-  </div>
+
 </template>
 
 <style scoped>

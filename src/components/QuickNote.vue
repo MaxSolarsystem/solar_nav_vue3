@@ -38,6 +38,19 @@ const clearNote = () => {
   }
 }
 
+const clearAllNotes = () => {
+  if (confirm('确定要清空所有笔记吗？此操作不可恢复！')) {
+    notes.value = [{
+      id: Date.now().toString(),
+      title: '笔记 1',
+      content: '',
+      createTime: new Date().toLocaleString()
+    }];
+    currentNoteId.value = notes.value[0].id;
+    saveNotes();
+  }
+}
+
 const exportNote = () => {
   const note = notes.value.find(note => note.id === currentNoteId.value);
   if (!note || !note.content.trim()) {
@@ -153,6 +166,12 @@ const loadNotes = () => {
 defineExpose({
   loadNotes
 });
+// 处理标签栏的水平滚动
+const handleTabScroll = (event: WheelEvent) => {
+  event.preventDefault();
+  const tabList = event.currentTarget as HTMLElement;
+  tabList.scrollLeft += event.deltaY;
+}
 </script>
 
 <template>
@@ -168,6 +187,13 @@ defineExpose({
           🗑️ 清除
         </button>
         <button 
+          @click="clearAllNotes" 
+          class="note-action-btn clear-all-btn" 
+          title="删除所有笔记"
+        >
+          🗑️ 删除所有笔记
+        </button>
+        <button 
           @click="exportNote" 
           class="note-action-btn export-btn" 
           title="导出为txt文件"
@@ -178,7 +204,10 @@ defineExpose({
     </div>
     
     <div class="note-tabs">
-      <div class="tab-list">
+      <div 
+        class="tab-list" 
+        @wheel.prevent="handleTabScroll"
+      >
         <button
           v-for="note in notes"
           :key="note.id"
@@ -348,6 +377,12 @@ textarea::-webkit-scrollbar-thumb:hover {
   padding-bottom: 0.5rem;
   border-bottom: 1px solid #e2e8f0;
   overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.tab-list::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .tab-item {
@@ -408,7 +443,6 @@ textarea::-webkit-scrollbar-thumb:hover {
   background: #e2e8f0;
   border-color: #64748b;
 }
-
 .title-input {
   background: transparent;
   border: none;
@@ -416,21 +450,23 @@ textarea::-webkit-scrollbar-thumb:hover {
   color: inherit;
   font-size: inherit;
   font-family: inherit;
-  padding: 0.2rem 0.4rem;
+  padding: 0;
   margin: 0;
-  width: 120px;
-  max-width: 150px;
+  width: auto;
+  min-width: 60px;
+  max-width: 120px;
   border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 .tab-item:not(.active) .title-input {
-  background: rgba(0, 0, 0, 0.03);
+  background: transparent;
 }
 
 .tab-item:not(.active) .title-input:focus {
   background: rgba(0, 0, 0, 0.05);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  box-shadow: none;
+  padding: 0 0.2rem;
 }
 
 .title-input::placeholder {
@@ -466,4 +502,4 @@ textarea::-webkit-scrollbar-thumb:hover {
     justify-content: center;
   }
 }
-</style> 
+</style>
