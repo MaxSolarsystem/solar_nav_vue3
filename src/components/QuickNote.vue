@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 
 // 笔记接口定义
 interface Note {
@@ -127,6 +127,10 @@ const updateNoteContent = (event: Event) => {
 const startEditTitle = (note: Note) => {
   editingNoteId.value = note.id;
   editingTitle.value = note.title;
+  nextTick(() => {
+    const input = document.querySelector('.title-input') as HTMLInputElement;
+    if (input) input.focus();
+  });
 }
 
 const saveTitle = () => {
